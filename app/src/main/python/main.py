@@ -491,3 +491,26 @@ def get_max_day(week):
 
 def get_weeks():
     return list(DAYS_DATA.keys())
+
+import sys
+from io import StringIO
+
+def run_code(code):
+    old_stdout = sys.stdout
+    old_stderr = sys.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    
+    try:
+        exec(code, {})
+        stdout_output = sys.stdout.getvalue()
+        stderr_output = sys.stderr.getvalue()
+        
+        if stderr_output:
+            return "Ошибка: " + stderr_output
+        return stdout_output if stdout_output else ""
+    except Exception as e:
+        return "Ошибка: " + str(e)
+    finally:
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr

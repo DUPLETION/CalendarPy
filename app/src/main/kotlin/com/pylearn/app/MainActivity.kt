@@ -163,6 +163,63 @@ class MainActivity : AppCompatActivity() {
         
         layout.addView(titleBar)
         
+        val editorCard = CardView(this).apply {
+            setCardBackgroundColor(AppColors.PRIMARY_LIGHT)
+            radius = 16f
+            cardElevation = 2f
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(16, 16, 16, 8)
+            layoutParams = params
+            isClickable = true
+            isFocusable = true
+        }
+        
+        val editorContent = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(20, 20, 20, 20)
+        }
+        
+        val editorIcon = TextView(this).apply {
+            text = "⚡"
+            textSize = 28f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        editorContent.addView(editorIcon)
+        
+        val editorText = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(16, 0, 0, 0)
+        }
+        
+        editorText.addView(TextView(this).apply {
+            text = "Редактор кода"
+            textSize = 16f
+            setTextColor(AppColors.TEXT_DARK)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        })
+        
+        editorText.addView(TextView(this).apply {
+            text = "Пиши и запускай Python-код"
+            textSize = 13f
+            setTextColor(AppColors.TEXT_MEDIUM)
+        })
+        
+        editorContent.addView(editorText)
+        editorCard.addView(editorContent)
+        
+        editorCard.setOnClickListener {
+            startActivity(android.content.Intent(this, EditorActivity::class.java))
+        }
+        
+        layout.addView(editorCard)
+        
         val currentWeek = progressData.getString("current_week")
         val currentDay = progressData.getInt("current_day")
         val pyModule = python.getModule("main")
