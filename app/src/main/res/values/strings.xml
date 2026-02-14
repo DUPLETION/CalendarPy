@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Python Learn</string>
+    <string name="channel_id">python_learn_channel</string>
+    <string name="notification_channel_name">Напоминания о Python</string>
+    <string name="notification_channel_description">Ежедневные напоминания для изучения Python</string>
+    <string name="settings">Настройки</string>
+    <string name="notifications">Уведомления</string>
+    <string name="notification_time">Время уведомлений</string>
+    <string name="notification_interval">Интервал уведомлений</string>
+    <string name="save">Сохранить</string>
+    <string name="close">Закрыть</string>
+    <string name="cancel">Отмена</string>
+    <string name="completed">Выполнено</string>
+    <string name="today">Сегодня</string>
+    <string name="not_completed">Не выполнено</string>
+    <string name="mark_as_completed">Отметить как выполненное</string>
+    <string name="day_completed">День выполнен!</string>
+    <string name="error_saving">Ошибка сохранения</string>
+    <string name="next_day">Следующий день</string>
+    <string name="advance_day">Переход к следующему дню!</string>
+    <string name="complete_current_day">Выполните текущий день!</string>
+    <string name="course_completed">Поздравляем! Ты завершил весь курс!</string>
+    <string name="learning_diary">Дневник обучения</string>
+    <string name="theory">Теория</string>
+    <string name="practice">Практика</string>
+    <string name="tasks">Задачи</string>
+    <string name="motivation_1">Каждый день приближает тебя к цели!</string>
+    <string name="motivation_2">Ты молодец, что учишься!</string>
+    <string name="motivation_3">Практика - ключ к успеху!</string>
+    <string name="motivation_4">Ошибки - это часть обучения!</string>
+    <string name="motivation_5">Ты на правильном пути!</string>
+    <string name="select_time">Выберите время</string>
+    <string name="interval_1h">Каждый час</string>
+    <string name="interval_2h">Каждые 2 часа</string>
+    <string name="interval_3h">Каждые 3 часа</string>
+    <string name="interval_6h">Каждые 6 часов</string>
+    <string name="interval_12h">Каждые 12 часов</string>
+    <string name="interval_24h">Раз в день</string>
+    <string name="notifications_enabled">Уведомления включены</string>
+    <string name="notifications_disabled">Уведомления выключены</string>
+    <string name="enable_notifications">Включить уведомления</string>
+    <string name="notification_permission_required">Требуется разрешение на уведомления</string>
+    <string name="go_to_settings">Перейти к настройкам</string>
+</resources>
