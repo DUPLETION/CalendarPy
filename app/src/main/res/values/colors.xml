@@ -1,17 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary Colors -->
+    <color name="primary">#FF2563EB</color>
+    <color name="primary_light">#FFEFF6FF</color>
+    <color name="primary_dark">#FF1D4ED8</color>
+    
+    <!-- Text Colors -->
+    <color name="text_dark">#FF1F2937</color>
+    <color name="text_medium">#FF6B7280</color>
+    <color name="text_light">#FF9CA3AF</color>
+    
+    <!-- State Colors -->
+    <color name="completed">#FFDCFCE7</color>
+    <color name="current">#FFDBEAFE</color>
+    <color name="success">#FF166534</color>
+    <color name="danger">#FFDC2626</color>
+    <color name="danger_bg">#FFFEF2F2</color>
+    
+    <!-- Background Colors -->
+    <color name="background">#FFF9FAFB</color>
+    <color name="card">#FFFFFFFF</color>
+    <color name="card_alt">#FFF8FAFC</color>
+    
+    <!-- Editor Colors -->
+    <color name="editor_background">#FF1E1E1E</color>
+    <color name="editor_text">#FFD4D4D4</color>
+    <color name="output_background">#FF0D0D0D</color>
+    <color name="output_text">#FF00FF00</color>
+    
+    <!-- Legacy support -->
     <color name="purple_primary">#FF8774E8</color>
     <color name="purple_dark">#FF6B4ECA</color>
     <color name="green_completed">#FF4CAF50</color>
     <color name="green_dark">#FF388E3C</color>
-    <color name="gray_light">#FFF0F0F0</color>
-    <color name="gray_medium">#FFCCCCCC</color>
-    <color name="gray_dark">#FF888888</color>
-    <color name="text_primary">#FF000000</color>
-    <color name="text_secondary">#FF333333</color>
     <color name="white">#FFFFFFFF</color>
     <color name="background_card">#FFFFFFFF</color>
-    <color name="theory_card">#FF1A3D2A</color>
-    <color name="practice_card">#FF2D2D4D</color>
-    <color name="tasks_card">#FF4D2D2D</color>
+    <color name="bg">#FFF9FAFB</color>
 </resources>

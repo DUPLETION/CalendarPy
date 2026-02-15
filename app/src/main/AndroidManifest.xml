@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:name="com.chaquo.python.android.PyApplication"
+        android:name=".App"
         android:allowBackup="true"
         android:label="PythonLearn"
         android:icon="@drawable/logo"

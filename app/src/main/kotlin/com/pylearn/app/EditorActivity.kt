@@ -1,6 +1,5 @@
 package com.pylearn.app
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Gravity
 import android.view.Menu
@@ -13,21 +12,49 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import com.chaquo.python.Python
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import com.pylearn.app.ui.editor.EditorViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class EditorActivity : AppCompatActivity() {
+    private val viewModel: EditorViewModel by viewModel()
+    
     private lateinit var codeEditor: EditText
     private lateinit var outputView: TextView
     private lateinit var runButton: Button
-    private lateinit var python: Python
     
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setContentView(createEditorView())
         
-        python = Python.getInstance()
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        observeViewModel()
+    }
+    
+    private fun observeViewModel() {
+        viewModel.output.observe(this) { output ->
+            outputView.text = output
+        }
+        
+        viewModel.isRunning.observe(this) { isRunning ->
+            runButton.isEnabled = !isRunning
+            runButton.text = if (isRunning) "⏳ Запуск..." else getString(R.string.run)
+        }
+        
+        viewModel.toastMessage.observe(this) { message ->
+            message?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                viewModel.clearToastMessage()
+            }
+        }
+        
+        viewModel.code.observe(this) { code ->
+            if (codeEditor.text.toString() != code) {
+                codeEditor.setText(code)
+            }
+        }
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -47,7 +74,7 @@ class EditorActivity : AppCompatActivity() {
             }
             R.id.action_clear -> {
                 codeEditor.setText("")
-                outputView.text = "Вывод программы:\n"
+                viewModel.clearOutput()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -57,206 +84,200 @@ class EditorActivity : AppCompatActivity() {
     private fun createEditorView(): LinearLayout {
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(AppColors.BG)
+            setBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.background))
         }
         
-        val toolbar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(16, 16, 16, 16)
-            setBackgroundColor(AppColors.PRIMARY)
-        }
-        
-        val title = TextView(this).apply {
-            text = "  Редактор Python"
-            textSize = 18f
-            setTextColor(0xFFFFFFFF.toInt())
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-        toolbar.addView(title)
+        val toolbar = createToolbar()
         mainLayout.addView(toolbar)
         
-        val editorCard = CardView(this).apply {
-            setCardBackgroundColor(0xFF1E1E1E.toInt())
-            radius = 12f
-            cardElevation = 2f
+        val editorCard = createEditorCard()
+        mainLayout.addView(editorCard)
+        
+        val buttonLayout = createButtonLayout()
+        mainLayout.addView(buttonLayout)
+        
+        val outputCard = createOutputCard()
+        mainLayout.addView(outputCard)
+        
+        return mainLayout
+    }
+    
+    private fun createToolbar(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
+            setBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.primary))
+        }.apply {
+            addView(TextView(this@EditorActivity).apply {
+                text = "  ${getString(R.string.editor_title)}"
+                textSize = 18f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.white))
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+        }
+    }
+    
+    private fun createEditorCard(): CardView {
+        return CardView(this).apply {
+            setCardBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.editor_background))
+            radius = dpToPx(12).toFloat()
+            cardElevation = dpToPx(2).toFloat()
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
                 1f
             )
-            params.setMargins(16, 16, 16, 8)
+            params.setMargins(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(8))
             layoutParams = params
-        }
-        
-        codeEditor = EditText(this).apply {
-            setText(defaultCode)
-            textSize = 14f
-            setTextColor(0xFFD4D4D4.toInt())
-            setBackgroundColor(0xFF1E1E1E.toInt())
-            gravity = Gravity.TOP or Gravity.START
-            setPadding(24, 24, 24, 24)
+        }.apply {
+            codeEditor = EditText(this@EditorActivity).apply {
+                setText(viewModel.code.value ?: viewModel.getDefaultCode())
+                textSize = 14f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.editor_text))
+                setBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.editor_background))
+                gravity = Gravity.TOP or Gravity.START
+                setPadding(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24))
+                
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                layoutParams = params
+                
+                setOnFocusChangeListener { _, hasFocus ->
+                    if (!hasFocus) {
+                        viewModel.setCode(text.toString())
+                    }
+                }
+            }
             
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            layoutParams = params
+            addView(codeEditor)
         }
-        
-        editorCard.addView(codeEditor)
-        mainLayout.addView(editorCard)
-        
-        val buttonLayout = LinearLayout(this).apply {
+    }
+    
+    private fun createButtonLayout(): LinearLayout {
+        return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            params.setMargins(16, 8, 16, 8)
+            params.setMargins(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(8))
             layoutParams = params
+        }.apply {
+            runButton = Button(this@EditorActivity).apply {
+                text = getString(R.string.run)
+                textSize = 14f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.white))
+                setBackgroundResource(R.drawable.btn_primary)
+                setPadding(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(8))
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.setMargins(0, 0, dpToPx(8), 0)
+                layoutParams = params
+                
+                setOnClickListener {
+                    viewModel.setCode(codeEditor.text.toString())
+                    viewModel.runCode()
+                }
+            }
+            addView(runButton)
+            
+            addView(Button(this@EditorActivity).apply {
+                text = getString(R.string.clear_code)
+                textSize = 12f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.white))
+                setBackgroundResource(R.drawable.btn_secondary)
+                setPadding(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(8))
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.setMargins(0, 0, dpToPx(8), 0)
+                layoutParams = params
+                
+                setOnClickListener {
+                    codeEditor.setText("")
+                    viewModel.setCode("")
+                }
+            })
+            
+            addView(Button(this@EditorActivity).apply {
+                text = getString(R.string.clear_output)
+                textSize = 12f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.text_dark))
+                setBackgroundResource(R.drawable.btn_light)
+                setPadding(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(8))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                
+                setOnClickListener {
+                    viewModel.clearOutput()
+                }
+            })
         }
-        
-        runButton = Button(this).apply {
-            text = "▶ Запустить"
-            textSize = 16f
-            setTextColor(0xFFFFFFFF.toInt())
-            setBackgroundColor(AppColors.PRIMARY)
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            params.setMargins(0, 0, 16, 0)
-            layoutParams = params
-        }
-        
-        val clearButton = Button(this).apply {
-            text = "Очистить вывод"
-            textSize = 14f
-            setTextColor(AppColors.TEXT_DARK)
-            setBackgroundColor(0xFFE5E7EB.toInt())
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        
-        runButton.setOnClickListener { runCode() }
-        clearButton.setOnClickListener { outputView.text = "Вывод программы:\n" }
-        
-        buttonLayout.addView(runButton)
-        buttonLayout.addView(clearButton)
-        mainLayout.addView(buttonLayout)
-        
-        val outputCard = CardView(this).apply {
-            setCardBackgroundColor(0xFF0D0D0D.toInt())
-            radius = 12f
-            cardElevation = 2f
+    }
+    
+    private fun createOutputCard(): CardView {
+        return CardView(this).apply {
+            setCardBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.output_background))
+            radius = dpToPx(12).toFloat()
+            cardElevation = dpToPx(2).toFloat()
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
                 1f
             )
-            params.setMargins(16, 8, 16, 16)
+            params.setMargins(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(16))
             layoutParams = params
-        }
-        
-        outputView = TextView(this).apply {
-            text = "Вывод программы:\n"
-            textSize = 13f
-            setTextColor(0xFF00FF00.toInt())
-            setBackgroundColor(0xFF0D0D0D.toInt())
-            gravity = Gravity.TOP or Gravity.START
-            setPadding(24, 16, 24, 16)
-            isVerticalScrollBarEnabled = true
-            
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            layoutParams = params
-        }
-        
-        outputCard.addView(outputView)
-        mainLayout.addView(outputCard)
-        
-        return mainLayout
-    }
-    
-    private fun runCode() {
-        val code = codeEditor.text.toString()
-        if (code.isBlank()) {
-            Toast.makeText(this, "Введите код", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        runButton.isEnabled = false
-        outputView.append("\n--- Запуск ---\n")
-        
-        Thread {
-            try {
-                val pyObj = Python.getInstance().getModule("main")
-                val result = pyObj.callAttr("run_code", code)
+        }.apply {
+            outputView = TextView(this@EditorActivity).apply {
+                text = getString(R.string.output_label)
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(this@EditorActivity, R.color.output_text))
+                setBackgroundColor(ContextCompat.getColor(this@EditorActivity, R.color.output_background))
+                gravity = Gravity.TOP or Gravity.START
+                setPadding(dpToPx(24), dpToPx(16), dpToPx(24), dpToPx(16))
+                isVerticalScrollBarEnabled = true
                 
-                runOnUiThread {
-                    val output = result.toString()
-                    if (output.isNotEmpty() && output != "None") {
-                        outputView.append(output)
-                    } else {
-                        outputView.append("Программа выполнена\n")
-                    }
-                    outputView.append("\n")
-                    runButton.isEnabled = true
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    outputView.append("Ошибка: ${e.message}\n")
-                    runButton.isEnabled = true
-                }
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                layoutParams = params
             }
-        }.start()
+            
+            addView(outputView)
+        }
     }
     
     private fun showSaveDialog() {
-        val input = EditText(this)
-        input.hint = "Имя файла"
-        input.setText("script.py")
+        val input = EditText(this).apply {
+            hint = getString(R.string.filename_hint)
+            setText(getString(R.string.default_filename))
+        }
         
         AlertDialog.Builder(this)
-            .setTitle("Сохранить скрипт")
+            .setTitle(R.string.save_script)
             .setView(input)
-            .setPositiveButton("Сохранить") { _, _ ->
+            .setPositiveButton(R.string.save) { _, _ ->
                 val filename = input.text.toString()
                 if (filename.isNotEmpty()) {
-                    saveScript(filename)
+                    viewModel.setCode(codeEditor.text.toString())
+                    viewModel.saveScript(filename)
                 }
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
     
-    private fun saveScript(filename: String) {
-        try {
-            val file = java.io.File(filesDir, filename)
-            file.writeText(codeEditor.text.toString())
-            Toast.makeText(this, "Сохранено: $filename", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ошибка сохранения: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
-    
-    private val defaultCode = """# Добро пожаловать в Python Editor!
-# Напишите свой код здесь и нажмите "Запустить"
-
-print("Привет, мир!")
-
-# Пример: простой калькулятор
-a = 10
-b = 5
-print(f"{a} + {b} = {a + b}")
-print(f"{a} - {b} = {a - b}")
-print(f"{a} * {b} = {a * b}")
-print(f"{a} / {b} = {a / b}")
-"""
 }
